@@ -22,6 +22,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "stdio.h"
+#include "string.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +45,8 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+uint8_t RxBuffer[2];
 
 /* USER CODE END PV */
 
@@ -87,6 +92,10 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_USART2_UART_Init();
 	/* USER CODE BEGIN 2 */
+
+	uint8_t text[] = "\033[2J\033[H\rHELLO! Welcome to simple menu.\n\rPress 0 for LED Control.\n\rPress 1 for Button Status.\n\r";
+	HAL_UART_Transmit(&huart2, text, strlen((char*)text), HAL_MAX_DELAY);
+	HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
 
 	/* USER CODE END 2 */
 
@@ -206,6 +215,17 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	if(huart == &huart2){
+		HAL_UART_Transmit(&huart2, "\033[2J\033[H\rYou pressed: ", 21, HAL_MAX_DELAY);
+		HAL_UART_Transmit(&huart2, RxBuffer, 1, HAL_MAX_DELAY);
+		HAL_UART_Transmit(&huart2, ". \n\r", 5, HAL_MAX_DELAY);
+
+		// receive next char
+		HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
+	}
+}
 
 /* USER CODE END 4 */
 
