@@ -47,6 +47,8 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 
 uint8_t RxBuffer[2];
+uint8_t queue = 0;
+uint8_t mode = 0;
 
 /* USER CODE END PV */
 
@@ -94,7 +96,7 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 
 	uint8_t text[] = "\033[2J\033[H\rHELLO! Welcome to simple menu.\n\rPress 0 for LED Control.\n\rPress 1 for Button Status.\n\r";
-	HAL_UART_Transmit(&huart2, text, strlen((char*)text), HAL_MAX_DELAY);
+	HAL_UART_Transmit(&huart2, text, strlen((char*) text), HAL_MAX_DELAY);
 	HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
 
 	/* USER CODE END 2 */
@@ -102,6 +104,47 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
+		if (queue) {
+			queue = 0;
+			HAL_UART_Transmit(&huart2, "\033[2J\033[H\rYou pressed: ", 21, HAL_MAX_DELAY);
+			HAL_UART_Transmit(&huart2, RxBuffer, 1, HAL_MAX_DELAY);
+			HAL_UART_Transmit(&huart2, ". ", 2, HAL_MAX_DELAY);
+
+			switch (mode) {
+			case 0: // MENU
+				if (RxBuffer[0] == '0') {
+					mode = 1;
+				} else if (RxBuffer[0] == '1') {
+					mode = 2;
+				} else {
+					HAL_UART_Transmit(&huart2, "WRONG BUTTON!", 13, HAL_MAX_DELAY);
+				}
+				break;
+			case 1: // LED
+				if (RxBuffer[0] == 'x') {
+					// back
+					mode = 0;
+				} else if (RxBuffer[0] == 'a') {
+					// increase
+				} else if (RxBuffer[0] == 's') {
+					// decrease
+				} else if (RxBuffer[0] == 'd') {
+					// toggle
+				} else {
+					HAL_UART_Transmit(&huart2, "WRONG BUTTON!", 13, HAL_MAX_DELAY);
+				}
+				break;
+			case 2: // BUTTON
+				if (RxBuffer[0] == 'x') {
+					// back
+					mode = 0;
+				} else {
+					HAL_UART_Transmit(&huart2, "WRONG BUTTON!", 13, HAL_MAX_DELAY);
+				}
+				break;
+			}
+
+		}
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
@@ -216,11 +259,9 @@ static void MX_GPIO_Init(void) {
 
 /* USER CODE BEGIN 4 */
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	if(huart == &huart2){
-		HAL_UART_Transmit(&huart2, "\033[2J\033[H\rYou pressed: ", 21, HAL_MAX_DELAY);
-		HAL_UART_Transmit(&huart2, RxBuffer, 1, HAL_MAX_DELAY);
-		HAL_UART_Transmit(&huart2, ". \n\r", 5, HAL_MAX_DELAY);
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	if (huart == &huart2) {
+		queue = 1;
 
 		// receive next char
 		HAL_UART_Receive_IT(&huart2, RxBuffer, 1);
