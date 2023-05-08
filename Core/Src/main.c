@@ -46,9 +46,13 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-uint8_t RxBuffer[2];
+uint8_t RxBuffer[1];
+uint8_t TxBuffer[40];
 uint8_t queue = 0;
 uint8_t mode = 0;
+
+uint8_t ledtoggle = 1;
+int32_t ledhz = 5;
 
 /* USER CODE END PV */
 
@@ -126,10 +130,16 @@ int main(void) {
 					mode = 0;
 				} else if (RxBuffer[0] == 'a') {
 					// increase
+					ledhz++;
 				} else if (RxBuffer[0] == 's') {
 					// decrease
+					ledhz--;
+					if (ledhz < 1) {
+						ledhz = 1;
+					}
 				} else if (RxBuffer[0] == 'd') {
 					// toggle
+					ledtoggle = !ledtoggle;
 				} else {
 					HAL_UART_Transmit(&huart2, "WRONG BUTTON!", 13, HAL_MAX_DELAY);
 				}
@@ -144,6 +154,39 @@ int main(void) {
 				break;
 			}
 
+			if (mode == 0) {
+				// MENU
+				uint8_t text[] = "\n\r\n=====\tMENU\t=====\n\rPress 0 for LED Control.\n\rPress 1 for Button Status.\n\r";
+				HAL_UART_Transmit(&huart2, text, strlen((char*) text), HAL_MAX_DELAY);
+			} else if (mode == 1) {
+				// LED
+				uint8_t text[] = "\n\r\n=====\tLED\t=====\n\ra: Increase Speed.\n\rs: Decrease Speed\n\rd: Toggle LED\n\r\nx: Back\n\r";
+				HAL_UART_Transmit(&huart2, text, strlen((char*) text), HAL_MAX_DELAY);
+
+				if (ledtoggle) {
+					sprintf((char*) TxBuffer, "\n\rThe current LED speed is %i Hz.", ledhz);
+					HAL_UART_Transmit(&huart2, TxBuffer, strlen((char*) TxBuffer), HAL_MAX_DELAY);
+				} else {
+					uint8_t text[] = "\n\rThe LED is OFF.";
+					HAL_UART_Transmit(&huart2, text, strlen((char*) text), HAL_MAX_DELAY);
+				}
+			} else {
+				// BUTTON
+				uint8_t text[] = "\n\r\n=====\tBTTN\t=====\n\r\nx: Back\n\r";
+				HAL_UART_Transmit(&huart2, text, strlen((char*) text), HAL_MAX_DELAY);
+			}
+
+		}
+
+		// Loop logic
+		static uint32_t timestamp = 0;
+		if(HAL_GetTick()>=timestamp){
+			timestamp = HAL_GetTick() + 1000 / ledhz;
+			if(ledtoggle){
+				HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+			}else{
+				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, RESET);
+			}
 		}
 		/* USER CODE END WHILE */
 
