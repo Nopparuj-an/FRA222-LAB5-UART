@@ -789,12 +789,12 @@ int main(void)
  80007e2:	681b      	ldr	r3, [r3, #0]
  80007e4:	429a      	cmp	r2, r3
  80007e6:	f4ff aefb 	bcc.w	80005e0 <main+0x4c>
-			timestamp = HAL_GetTick() + 1000 / ledhz;
+			timestamp = HAL_GetTick() + 500 / ledhz;
  80007ea:	f000 fb47 	bl	8000e7c <HAL_GetTick>
  80007ee:	4602      	mov	r2, r0
  80007f0:	4b13      	ldr	r3, [pc, #76]	; (8000840 <main+0x2ac>)
  80007f2:	681b      	ldr	r3, [r3, #0]
- 80007f4:	f44f 717a 	mov.w	r1, #1000	; 0x3e8
+ 80007f4:	f44f 71fa 	mov.w	r1, #500	; 0x1f4
  80007f8:	fb91 f3f3 	sdiv	r3, r1, r3
  80007fc:	4413      	add	r3, r2
  80007fe:	4a18      	ldr	r2, [pc, #96]	; (8000860 <main+0x2cc>)

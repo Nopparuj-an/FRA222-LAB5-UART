@@ -182,7 +182,7 @@ int main(void)
 		// Loop logic
 		static uint32_t timestamp = 0;
 		if (HAL_GetTick() >= timestamp) {
-			timestamp = HAL_GetTick() + 1000 / ledhz;
+			timestamp = HAL_GetTick() + 500 / ledhz;
 			if (ledtoggle) {
 				HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 			} else {
